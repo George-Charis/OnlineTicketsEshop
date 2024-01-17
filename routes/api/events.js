@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const eventsController = require('../../controllers/eventsController');
+const multer = require('multer');
+const form = multer();
 
 router.route('/')
     .get(eventsController.getAllEvents)
     .put(eventsController.updateEvent)
-    .post(eventsController.addEvent)
+    .post(form.array("files"), eventsController.addEvent)
     .delete(eventsController.deleteEvent);
 
 router.route('/:name')

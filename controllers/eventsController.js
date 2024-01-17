@@ -16,38 +16,40 @@ const getEvent = async (req, res) => {
 }
 
 const addEvent = async (req, res) => {
-    console.log(req.body);
-    const { name, description, date, coordinates, ticket_price, images } = req.body;
+    const { eventName, description, date, coordinates, ticketPrice } = req.body;
     const files = req.files;
 
-    if (!name || !description || !date || !coordinates || !ticket_price) {
-        return res.status(400).json({ 'message': 'Event\'s name, description, date, coordinates and ticket_price' });
+    if (!eventName || !description || !date || !coordinates || !ticketPrice) {
+        return res.status(400).json({ 'message': 'Event\'s name, description, date, coordinates, and ticket_price are required' });
     }
 
-    const foundEvent = await Events.findOne({ event_name: name }).exec();
+    const foundEvent = await Events.findOne({ event_name: eventName }).exec();
     if (foundEvent) return res.sendStatus(409);
 
+    let imageUrls = [];
+
     if(files){
-        const imagesArray = await imagesController.storeImages(files, name);
-        console.log(imagesArray);
+        imageUrls = await imagesController.storeImages(files, eventName);
+        console.log(imageUrls);
     }
 
     try {
+
         await Events.create({
-            "event_name": name,
-            "event_description": description,
+            "event_name": eventName,
+           "event_description": description,
             "event_date": date,
             "event_coordinates": coordinates,
-            "event_ticket_price": ticket_price,
-           // "event_images": imagesArray
+            "event_ticket_price": ticketPrice,
+            "event_images": imageUrls
         });
 
-        res.status(201).json({ 'success': `New event ${name} created!` });
+        res.status(201).json({ 'success': `New event ${eventName} created!` });
     } catch (err) {
-        res.status(500).json({ "message": err.message });
+        console.error('Error in addEvent:', err);
+        res.status(500).json({ "message": 'Internal Server Error' });
     }
 }
-
 
 
 const updateEvent = async (req, res) => {
@@ -87,7 +89,3 @@ module.exports = {
     updateEvent,
     deleteEvent
 }
-
-
-
-

@@ -1,0 +1,49 @@
+body {
+    font-family: sans-serif; /* Change the font-family as needed */
+    background-color: #e8e8e8; /* Very light grey background */
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    color: #005a8d; /* Dark blue color for the title */
+}
+
+.password-box {
+    background-color: #ffffff; /* White background for the box */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Drop shadow effect */
+}
+
+.password-input,
+.confirm-password-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #b4b4b4; /* Light grey border for the text fields */
+    border-radius: 4px;
+}
+
+.confirm-button {
+    background-color: #007acc; /* Dark blue color for the button */
+    color: #ffffff; /* White text color for the button */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.confirm-button:hover {
+    background-color: #005a8d; /* Light blue color on hover */
+}

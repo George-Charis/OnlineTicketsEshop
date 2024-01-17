@@ -1,49 +1,60 @@
 const Image = require ("../model/Image");
 
-const storeImages = async (localImages, name, res) => {
+const storeImages = async (localImages, name) => {
+  const files = localImages;
+  let imageUrls = [];
 
-    const files = localImages;
-    console.log(files);
-
-    try {
-      const filePromises = Object.keys(files).map(async (key) => {
-        console.log(files[key]);
-        const fileData = {
-          associated_event: name,
-          name: files[key].name,
-          data: files[key].data,
-        };
-        console.log(fileData);
-        // Save the file to MongoDB
+  try {
+    await Promise.all(files.map(async (file) => {
+      const fileData = {
+        associated_event: name,
+        name: file.originalname,
+        data: file.buffer,
+      };
+      const foundImage = await Image.findOne({ associated_event: fileData.associated_event, name: fileData.name }).exec();
+      if (!foundImage) {
         await Image.create(fileData);
-      });
+        imageUrls.push(`${process.env.API_URI}images/${name}/${fileData.name}`);
+      }
+    }));
 
-      const uploadedFiles = await Promise.all(filePromises);
+    console.log(imageUrls);
+    return imageUrls;
 
-      return uploadedFiles;
-    } catch (err) {
-      console.error('Error saving files to MongoDB:', err);
-      return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
-    }
-}
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 
 const getImagesByEvent = async (req, res) => {
-    if(!req?.params?.eventName) 
-        return res.status(400).json({ 'message': 'Event\'s name required.' });
+  const { eventName, imageName } = req.params;
 
-    const findImagesByEvent = await Image.find({ associated_event: req.params.eventName }).exec();
-    if(!findImagesByEvent.length) return res.status(404).json({ 'message': 'No images found' });
+  if (!eventName || !imageName) {
+    return res.status(400).json({ 'message': 'Event\'s name and image\'s name are required.' });
+  }
 
-    try{
-        findImagesByEvent.forEach( (image) => {
-            const decodedImage = Buffer.from(findImagesByEvent.image, 'base64');
-            res.end(decodedImage);
-        });
-    }catch(err){
-        console.error(`Error serving image ${req.params.imageId}:`, err);
-        res.status(500).json({ 'message': 'Internal Server Error' });
+  try {
+    const findImagesByEvent = await Image.findOne({ associated_event: eventName, name: imageName }).exec();
+
+    if (!findImagesByEvent) {
+      return res.status(404).json({ 'message': 'No image found' });
     }
-}
+
+    // Set headers only once before writing the image data
+    res.writeHead(200, {
+      'Content-Type': 'image/jpeg', // Adjust content type based on your image type
+    });
+
+    // Write the image data to the response
+    res.write(findImagesByEvent.data);
+
+    res.end(); // End the response after writing the image data
+  } catch (err) {
+    console.error(`Error serving image for ${eventName}:`, err);
+    res.status(500).json({ 'message': 'Internal Server Error' });
+  }
+};
 
 module.exports = {
     storeImages,
