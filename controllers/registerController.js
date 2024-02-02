@@ -2,6 +2,7 @@ const User = require('../model/User');
 const bcrypt = require('bcrypt');
 const {v4: uuid} = require('uuid');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const handleNewUser = async (req, res) => {
 
@@ -36,7 +37,7 @@ const handleNewUser = async (req, res) => {
                  }
             },
             process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: "10m" }
+            { expiresIn: "30m" }
         );
 
         const refreshToken = jwt.sign(
@@ -56,8 +57,22 @@ const handleNewUser = async (req, res) => {
         });
 
         console.log(result);
-        
-        res.status(201).json({ accessToken });
+
+        const secretKey = process.env.UID_SECRET_KEY; 
+
+        // Function to encrypt the UID
+        const encryptUid = (uid) => {
+            const iv = crypto.randomBytes(16); // Generate a random initialization vector
+            const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), iv);
+            let encryptedUid = cipher.update(uid, 'utf-8', 'hex');
+            encryptedUid += cipher.final('hex');
+            return { encryptedUid, iv: iv.toString('hex') };
+        };
+
+        const encryptedUid =  encryptUid(foundUser.uid);
+
+        res.cookie('jwt', refreshToken , { httpOnly: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
+        res.status(201).json({ accessToken, encryptedUid });
 
     }catch(err){
         res.status(500).json({ 'message': err.message });

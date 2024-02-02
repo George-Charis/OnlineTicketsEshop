@@ -54,9 +54,18 @@ const addEvent = async (req, res) => {
 
 const updateEvent = async (req, res) => {
     if(!req?.params?.name) return res.status(400).json({ 'message': `Event's name required.` });
+    const files = req.files;
 
     const event = await Events.findOne({ event_name: req.params.name }).exec();
     if(!event) return res.status(404).json({ 'message': `Event name ${req.params.name} not found` });
+
+    let imageUrls = [];
+
+    if(files){
+        imageUrls = await imagesController.storeImages(files, event.event_name);
+        console.log(imageUrls);
+        event.event_images.push(...imageUrls);
+    }
 
     if(req.body.eventName){
         const foundName = await Events.findOne({event_name : req.body.eventName}).exec();

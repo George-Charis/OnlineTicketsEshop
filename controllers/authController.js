@@ -1,6 +1,7 @@
 const User = require('../model/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const handleLogin = async (req,res) => {
 
@@ -30,7 +31,7 @@ const handleLogin = async (req,res) => {
                }
             },
             process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: '10m' }
+            { expiresIn: '30m' }
         );
 
         const refreshToken = jwt.sign(
@@ -43,9 +44,22 @@ const handleLogin = async (req,res) => {
         const result = await foundUser.save();
         console.log(result);
 
-        res.cookie('jwt', refreshToken , { httpOnly: true, secure: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
+        const secretKey = process.env.UID_SECRET_KEY; 
 
-        res.json({ accessToken }); //store this in memory not in local storage
+        // Function to encrypt the UID
+        const encryptUid = (uid) => {
+            const iv = crypto.randomBytes(16); // Generate a random initialization vector
+            const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), iv);
+            let encryptedUid = cipher.update(uid, 'utf-8', 'hex');
+            encryptedUid += cipher.final('hex');
+            return { encryptedUid, iv: iv.toString('hex') };
+        };
+
+        const encryptedUid =  encryptUid(foundUser.uid);
+
+        res.cookie('jwt', refreshToken , { httpOnly: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
+
+        res.json({ accessToken , encryptedUid }); 
     }else{
         res.sendStatus(401);
     }

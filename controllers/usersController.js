@@ -1,4 +1,6 @@
 const User = require('../model/User');
+const bcrypt = require("bcrypt");
+const crypto = require('crypto');
 
 const getAllUsers = async (req, res) => {
     const users = await User.find();
@@ -7,21 +9,51 @@ const getAllUsers = async (req, res) => {
 }
 
 const getUser = async (req, res) => {
-    if (!req?.params?.id) return res.status(400).json({ 'message': 'User ID required.' });
-    console.log(req.params.id);
-    const user = await User.findOne({ uid: req.params.id }).exec();
+    if (!req?.params?.key || !req?.params?.iv) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
+
+    const secretKey = process.env.UID_SECRET_KEY; 
+    const decryptUid = (encryptedData, secretKey) => {
+        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
+        let decryptedUid = decipher.update(encryptedData.encryptedUid, 'hex', 'utf-8');
+        decryptedUid += decipher.final('utf-8');
+        return decryptedUid;
+    };
+
+    const encryptedData = {
+        "encryptedUid": req.params.key,
+        "iv": req.params.iv
+    };
+
+    const decryptedUid = decryptUid(encryptedData,secretKey); 
+
+    const user = await User.findOne({ uid: decryptedUid }).exec();
     if (!user) {
-        return res.status(404).json({ 'message': `User ID ${req.params.id} not found` });
+        return res.status(404).json({ 'message': `User ID ${req.params.key} not found` });
     }
-    res.json(user)
+    res.status(200).json(user);
 }
 
 const updateUser = async (req, res) => {
-    if(!req?.params?.id) return res.status(400).json({ 'message': 'User ID required. '});
+    if (!req?.params?.key || !req?.params?.iv) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
-    const user = await User.findOne({ uid: req.params.id}).exec();
+    const secretKey = process.env.UID_SECRET_KEY; 
+    const decryptUid = (encryptedData, secretKey) => {
+        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
+        let decryptedUid = decipher.update(encryptedData.encryptedUid, 'hex', 'utf-8');
+        decryptedUid += decipher.final('utf-8');
+        return decryptedUid;
+    };
+
+    const encryptedData = {
+        "encryptedUid": req.params.key,
+        "iv": req.params.iv
+    };
+
+    const decryptedUid = decryptUid(encryptedData,secretKey);
+
+    const user = await User.findOne({ uid: decryptedUid}).exec();
     if (!user) {
-        return res.status(404).json({ 'message': `User ID ${req.params.id} not found` });
+        return res.status(404).json({ 'message': `User ID ${req.params.key} not found` });
     }
 
     if(req.body.username) user.username = req.body.username;
@@ -38,11 +70,26 @@ const updateUser = async (req, res) => {
 }
 
 const deleteUser = async (req, res) => {
-    if(!req?.params?.id) return res.status(400).json({ 'message': 'User ID required. '});
+    if (!req?.params?.key || !req?.params?.iv) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
-    const user = await User.findOne({ uid: req.params.id}).exec();
+    const secretKey = process.env.UID_SECRET_KEY; 
+    const decryptUid = (encryptedData, secretKey) => {
+        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
+        let decryptedUid = decipher.update(encryptedData.encryptedUid, 'hex', 'utf-8');
+        decryptedUid += decipher.final('utf-8');
+        return decryptedUid;
+    };
+
+    const encryptedData = {
+        "encryptedUid": req.params.key,
+        "iv": req.params.iv
+    };
+
+    const decryptedUid = decryptUid(encryptedData,secretKey);
+    
+    const user = await User.findOne({ uid: decryptedUid}).exec();
     if (!user) {
-        return res.status(404).json({ 'message': `User ID ${req.params.id} not found` });
+        return res.status(404).json({ 'message': `User ID ${req.params.key} not found` });
     }
 
     const result = await User.deleteOne({ uid: user.uid });
