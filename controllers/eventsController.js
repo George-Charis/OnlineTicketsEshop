@@ -16,11 +16,11 @@ const getEvent = async (req, res) => {
 }
 
 const addEvent = async (req, res) => {
-    const { eventName, description, date, coordinates, ticketPrice } = req.body;
+    const { eventName, description, category, dates, coordinates, ticketPrice } = req.body;
     const files = req.files;
 
-    if (!eventName || !description || !date || !coordinates || !ticketPrice) {
-        return res.status(400).json({ 'message': 'Event\'s name, description, date, coordinates, and ticket_price are required' });
+    if (!eventName || !description || !dates || !coordinates || !ticketPrice || !category) {
+        return res.status(400).json({ 'message': 'Event\'s name, description, date, coordinates, ticket_price and category are required' });
     }
 
     const foundEvent = await Events.findOne({ event_name: eventName }).exec();
@@ -37,8 +37,9 @@ const addEvent = async (req, res) => {
 
         await Events.create({
             "event_name": eventName,
-           "event_description": description,
-            "event_date": date,
+            "event_description": description,
+            "event_category": category,
+            "event_dates": dates,
             "event_coordinates": coordinates,
             "event_ticket_price": ticketPrice,
             "event_images": imageUrls

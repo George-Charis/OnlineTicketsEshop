@@ -8,7 +8,7 @@ router.route('/')
     .put(usersController.updateUser)
     .delete(usersController.deleteUser);
 
-router.route('/:key/:iv')
+router.route('/:key/:iv?')
     .get(usersController.getUser)
     .put(usersController.updateUser)
     .delete(usersController.deleteUser);

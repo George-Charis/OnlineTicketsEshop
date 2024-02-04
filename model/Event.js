@@ -10,10 +10,20 @@ const eventSchema = new Schema({
         type: String,
         required: true
     },
-    event_date: {
-        type: Date,
+    event_category:{
+        type: String,
         required: true
     },
+    event_dates: [{
+        date: {
+            type: Date,
+            required: true
+        },
+        max_tickets: {
+            type: Number,
+            required: true
+        }
+    }],
     event_coordinates: {
         type: String,
         required: true

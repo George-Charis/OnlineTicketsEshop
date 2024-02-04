@@ -69,7 +69,7 @@ const handleNewUser = async (req, res) => {
             return { encryptedUid, iv: iv.toString('hex') };
         };
 
-        const encryptedUid =  encryptUid(foundUser.uid);
+        const encryptedUid =  encryptUid(result.uid);
 
         res.cookie('jwt', refreshToken , { httpOnly: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
         res.status(201).json({ accessToken, encryptedUid });

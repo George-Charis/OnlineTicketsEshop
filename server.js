@@ -30,6 +30,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 app.use('/images', require('./routes/images'));
+app.use('/order', require('./routes/api/orders'));
 
 app.use('/users', require('./routes/api/users'));
 app.use('/events', require('./routes/api/events'));

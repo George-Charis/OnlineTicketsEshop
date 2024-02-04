@@ -34,22 +34,26 @@ const getUser = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-    if (!req?.params?.key || !req?.params?.iv) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
+    if (!req?.params?.key) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
-    const secretKey = process.env.UID_SECRET_KEY; 
-    const decryptUid = (encryptedData, secretKey) => {
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
-        let decryptedUid = decipher.update(encryptedData.encryptedUid, 'hex', 'utf-8');
-        decryptedUid += decipher.final('utf-8');
-        return decryptedUid;
-    };
+    const decryptedUid = req.params.key;
 
-    const encryptedData = {
-        "encryptedUid": req.params.key,
-        "iv": req.params.iv
-    };
+    if(req.params.iv){
+        const secretKey = process.env.UID_SECRET_KEY; 
+        const decryptUid = (encryptedData, secretKey) => {
+            const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
+            let decryptedUid = decipher.update(encryptedData.encryptedUid, 'hex', 'utf-8');
+            decryptedUid += decipher.final('utf-8');
+            return decryptedUid;
+        };
 
-    const decryptedUid = decryptUid(encryptedData,secretKey);
+        const encryptedData = {
+            "encryptedUid": req.params.key,
+            "iv": req.params.iv
+        };
+
+        decryptedUid = decryptUid(encryptedData,secretKey);
+    }
 
     const user = await User.findOne({ uid: decryptedUid}).exec();
     if (!user) {
@@ -70,22 +74,26 @@ const updateUser = async (req, res) => {
 }
 
 const deleteUser = async (req, res) => {
-    if (!req?.params?.key || !req?.params?.iv) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
+    if (!req?.params?.key) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
-    const secretKey = process.env.UID_SECRET_KEY; 
-    const decryptUid = (encryptedData, secretKey) => {
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
-        let decryptedUid = decipher.update(encryptedData.encryptedUid, 'hex', 'utf-8');
-        decryptedUid += decipher.final('utf-8');
-        return decryptedUid;
-    };
+    const decryptedUid = req.params.key;
 
-    const encryptedData = {
-        "encryptedUid": req.params.key,
-        "iv": req.params.iv
-    };
+    if(req.params.iv){
+        const secretKey = process.env.UID_SECRET_KEY; 
+        const decryptUid = (encryptedData, secretKey) => {
+            const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
+            let decryptedUid = decipher.update(encryptedData.encryptedUid, 'hex', 'utf-8');
+            decryptedUid += decipher.final('utf-8');
+            return decryptedUid;
+        };
 
-    const decryptedUid = decryptUid(encryptedData,secretKey);
+        const encryptedData = {
+            "encryptedUid": req.params.key,
+            "iv": req.params.iv
+        };
+
+        decryptedUid = decryptUid(encryptedData,secretKey);
+    }
     
     const user = await User.findOne({ uid: decryptedUid}).exec();
     if (!user) {
