@@ -19,7 +19,7 @@ const orderSchema = new Schema({
         required: true
     },
     date_of_event:{
-        type: String,
+        type: Date,
         required: true
     },
     user_email: {

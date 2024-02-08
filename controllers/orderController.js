@@ -16,18 +16,20 @@ const makeNewOrder = async (req, res) => {
 
     const selectedDate = foundEvent.event_dates.find(dateObj => {
         if(dateObj.date.toISOString().slice(0, 10) === date_of_event){
-            dateObj.max_tickets -= quantity;
-            return dateObj;
+                dateObj.max_tickets -= quantity;
+                return dateObj;         
         }           
     });
+
+    console.log(selectedDate);
 
 
     if (!selectedDate) 
         return res.status(404).json({ 'message': 'Date not found in event_dates' });
-    
 
-    if(selectedDate.max_tickets-quantity<=0) 
-        return res.status(400).json({'message': `There are ${selectedDate.max_tickets} available`});
+    if(selectedDate.max_tickets<0)
+        return res.status(400).json({'message': `There are ${selectedDate.max_tickets + quantity} available`});
+
 
    try{
         const totalPrice = quantity * foundEvent.event_ticket_price;
@@ -37,7 +39,7 @@ const makeNewOrder = async (req, res) => {
             "event": event,
             "quantity": quantity,
             "total_price": totalPrice,
-            "date_of_event": selectedDate.date,
+            "date_of_event": selectedDate.date.toISOString,
             "user_email": user_email
         });
 
@@ -47,8 +49,8 @@ const makeNewOrder = async (req, res) => {
 
         console.log(updatedEvent);
 
-        foundUser.total_tickets = quantity;
-        foundUser.total_money_spend = totalPrice;
+        foundUser.total_tickets += quantity;
+        foundUser.total_money_spend += totalPrice;
         const updatedUser = await foundUser.save();
 
         console.log(updatedUser);
@@ -77,10 +79,30 @@ const getOrder = async (req, res) => {
 const deleteOrder = async (req, res) => {
     if(!req?.params?.id) return res.status(400).json({'message': 'Order id required'});
 
-    const foundOrder = await Order.findOne({orderId: req.params.id});
+    const foundOrder = await Order.findOne({orderId: req.params.id}).exec();
     if(!foundOrder) return res.status(404).json({'message': 'No order found'});
 
-    const deletedOrder = await Order.deleteOne({orderId: foundOrder.orderId});
+    const foundEvent = await Event.findOne({event_name: foundOrder.event}).exec();
+    if(!foundEvent) return res.status(404).json({'message': 'No event found'});
+    
+    foundEvent.event_dates.find(dateObj => {
+        console.log(dateObj.date.toISOString().slice(0,10))
+        console.log(foundOrder.date_of_event.toISOString().slice(0,10))
+        if(dateObj.date.toISOString().slice(0,10) === foundOrder.date_of_event.toISOString().slice(0,10)){
+            dateObj.max_tickets += foundOrder.quantity;
+        }           
+    });
+
+
+    const foundUser = await User.findOne({email: foundOrder.user_email}).exec();
+    if(!foundUser) return res.status(404).json({'message': 'No user found'});
+
+    foundUser.total_tickets -= foundOrder.quantity;
+    foundUser.total_money_spend -= foundOrder.total_price;
+
+    await foundUser.save();
+    await foundEvent.save();
+    await Order.deleteOne({orderId: foundOrder.orderId});
     return res.json(foundOrder);
 }
 

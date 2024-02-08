@@ -74,12 +74,12 @@ const updateEvent = async (req, res) => {
         event.event_name = req.body.eventName;  
     } 
     if(req.body.description) event.event_description = req.body.description;
-    if(req.body.date) event.event_date = req.body.date;
+    if(req.body.date) event.event_dates = req.body.date;
     if(req.body.coordinates) event.event_coordinates = req.body.coordinates;
     if(req.body.ticket_price) event.event_ticket_price = req.body.ticket_price;
 
     const result = await event.save();
-    res.json(event);
+    res.json(result);
 }
 
 const deleteEvent = async (req, res) => {
