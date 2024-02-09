@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 
 const handleRefreshToken = async (req, res) => {
 
+    //check if access token is valid if yes return 200 else try to get a new one with the refresh token
     const authHeader = req.headers.authorization || req.headers.Authorization;
     if(!authHeader?.startsWith('Bearer ')) return res.sendStatus(401);
 
@@ -12,14 +13,18 @@ const handleRefreshToken = async (req, res) => {
         token,
         process.env.ACCESS_TOKEN_SECRET,
         async (err, decoded) => {
+            //if access token is not valid
             if(err){
+                //check cookie for stored refresh token
                 const cookies = req.cookies;
                 if(!cookies?.jwt) return res.sendStatus(401);
                 const refreshToken = cookies.jwt;
             
+                //find user with the same refresh token as the cookie
                 const foundUser = await User.findOne({ refreshToken }).exec();
                 if(!foundUser) return res.sendStatus(403);
             
+                //check if refresh token is valid if yes return a new access token if no user must login
                 jwt.verify(
                     refreshToken,
                     process.env.REFRESH_TOKEN_SECRET,

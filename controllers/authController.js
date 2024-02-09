@@ -57,6 +57,7 @@ const handleLogin = async (req,res) => {
 
         const encryptedUid =  encryptUid(foundUser.uid);
 
+        //store refresh token to a cookie
         res.cookie('jwt', refreshToken , { httpOnly: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
 
         res.json({ accessToken , encryptedUid }); 

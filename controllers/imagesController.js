@@ -1,5 +1,6 @@
 const Image = require ("../model/Image");
 
+//function to store the images in the database
 const storeImages = async (localImages, name) => {
   const files = localImages;
   let imageUrls = [];
@@ -11,6 +12,7 @@ const storeImages = async (localImages, name) => {
         name: file.originalname,
         data: file.buffer,
       };
+      //check if the image exists if not store and create url
       const foundImage = await Image.findOne({ associated_event: fileData.associated_event, name: fileData.name }).exec();
       if (!foundImage) {
         await Image.create(fileData);
@@ -19,6 +21,7 @@ const storeImages = async (localImages, name) => {
     }));
 
     console.log(imageUrls);
+    //return the generated image urls
     return imageUrls;
 
   } catch (err) {

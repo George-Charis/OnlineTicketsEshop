@@ -28,6 +28,7 @@ const addEvent = async (req, res) => {
 
     let imageUrls = [];
 
+    //check if images are sent and if yes store them in the database
     if(files){
         imageUrls = await imagesController.storeImages(files, eventName);
         console.log(imageUrls);
@@ -62,6 +63,7 @@ const updateEvent = async (req, res) => {
 
     let imageUrls = [];
 
+    //check if images are sent and if yes store them in the database
     if(files){
         imageUrls = await imagesController.storeImages(files, event.event_name);
         console.log(imageUrls);
@@ -69,6 +71,7 @@ const updateEvent = async (req, res) => {
     }
 
     if(req.body.eventName){
+        //check if event name exists
         const foundName = await Events.findOne({event_name : req.body.eventName}).exec();
         if(foundName) return res.sendStatus(409);
         event.event_name = req.body.eventName;  

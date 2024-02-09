@@ -11,6 +11,7 @@ const getAllUsers = async (req, res) => {
 const getUser = async (req, res) => {
     if (!req?.params?.key || !req?.params?.iv) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
+    //decrypt the encryptedUid-iv
     const secretKey = process.env.UID_SECRET_KEY; 
     const decryptUid = (encryptedData, secretKey) => {
         const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
@@ -26,6 +27,7 @@ const getUser = async (req, res) => {
 
     const decryptedUid = decryptUid(encryptedData,secretKey); 
 
+    //check if user exists
     const user = await User.findOne({ uid: decryptedUid }).exec();
     if (!user) {
         return res.status(404).json({ 'message': `User ID ${req.params.key} not found` });
@@ -34,11 +36,15 @@ const getUser = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
+    //optional encryptedUid/iv - works with userId as well as 
     if (!req?.params?.key) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
+    //store the encrypted uid or uid- depends if user knows the actual uid for example admins
     let decryptedUid = req.params.key;
 
+    //if iv is provided means that uid is encrypted
     if(req.params.iv){
+        //decrypt
         const secretKey = process.env.UID_SECRET_KEY; 
         const decryptUid = (encryptedData, secretKey) => {
             const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));
@@ -62,6 +68,7 @@ const updateUser = async (req, res) => {
 
     if(req.body.username) user.username = req.body.username;
     if(req.body.email){
+        //check for email duplication
         const foundEmail = await User.findOne({email: req.body.email}).exec();
         if(foundEmail) return res.sendStatus(409);
         user.email = req.body.email;
@@ -74,11 +81,15 @@ const updateUser = async (req, res) => {
 }
 
 const deleteUser = async (req, res) => {
+    //optional encryptedUid/iv - works with userId as well as
     if (!req?.params?.key) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
+    //store the encrypted uid or uid- depends if user knows the actual uid for example admins
     let decryptedUid = req.params.key;
 
+     //if iv is provided means that uid is encrypted
     if(req.params.iv){
+        //decrypt
         const secretKey = process.env.UID_SECRET_KEY; 
         const decryptUid = (encryptedData, secretKey) => {
             const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(encryptedData.iv, 'hex'));

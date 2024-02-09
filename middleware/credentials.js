@@ -1,5 +1,6 @@
 const allowedOrigins = require('../config/allowedOrigins');
 
+//middeware for allowed origins (who has access to the api)
 const credentials = (req, res, next) => {
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin)) {

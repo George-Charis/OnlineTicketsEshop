@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 
+//middleware to check if access token is not expired
 const verifyJWT = (req, res, next) => {
 
     const authHeader = req.headers.authorization || req.headers.Authorization;

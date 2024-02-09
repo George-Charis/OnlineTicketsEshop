@@ -12,6 +12,7 @@ const transporter = nodemailer.createTransport({
     }
   });
 
+  //function to sent email for changing password
 const handleForgotPassword = async (req, res) => {
 
     const { reqUserEmail } = req.body;
@@ -20,6 +21,7 @@ const handleForgotPassword = async (req, res) => {
     const foundUser = await User.findOne({email: reqUserEmail}).exec();
     if(!foundUser) return res.status(401).json({"message": `User's email: ${reqUserEmail} not found`});
 
+    //token to make the link for changing password expire
     const resetToken = jwt.sign(
       { "UserInfo": {
         email: foundUser.email,
@@ -32,6 +34,7 @@ const handleForgotPassword = async (req, res) => {
     foundUser.resetToken = resetToken;
     await foundUser.save();
 
+    //generate the link that will allow the user to change password and send it
     const confirmationLink = `http://localhost:3500/forgotPassword/${resetToken}`;
     const mailOptions = {
       from: 'multiplatformonlineticketshop@gmail.com',
@@ -47,6 +50,7 @@ const handleForgotPassword = async (req, res) => {
     res.status(200).json({'message': `An email has been sent to ${foundUser.email}`});
 }
 
+//function which is called by pressing the button in the email
 const changePassword = async (req, res) => {
   
   if(!req?.params?.resetToken) return res.status(400).json({'message': "Reset token is required"});
@@ -56,14 +60,17 @@ const changePassword = async (req, res) => {
 
   if(!newPassword || !confirmNewPassword) return res.status(400).json({'message': "Both fields must be completed"});
 
+  //confirm that the new passwords are the same
   if(newPassword !== confirmNewPassword) return res.status(400).json({'message': "The passwords are not the same"});
 
   const foundUser = await User.findOne({resetToken: resetToken});
   if(!foundUser) return res.status(404).json({'message': "User not found"});
 
+  //prevent the user to type his old password
   const oldPasswordDecoded = await bcrypt.compare(newPassword, foundUser.password);
   if(oldPasswordDecoded) return res.status(400).json({'message': 'Please type a new password and not the one that you already have'});
   
+  //encrypt password and store it-remove the reset token
   foundUser.password = await bcrypt.hash(newPassword, 10);
   foundUser.resetToken = " ";
   await foundUser.save();
