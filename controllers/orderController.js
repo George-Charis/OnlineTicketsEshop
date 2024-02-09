@@ -15,7 +15,7 @@ const makeNewOrder = async (req, res) => {
     if(!foundEvent) return res.status(404).json({'message': 'Event not found'});
 
     const selectedDate = foundEvent.event_dates.find(dateObj => {
-        if(dateObj.date.toISOString().slice(0, 10) === date_of_event){
+        if(dateObj.date.toISOString().slice(0,10) === date_of_event.slice(0,10)){
                 dateObj.max_tickets -= quantity;
                 return dateObj;         
         }           
@@ -28,7 +28,7 @@ const makeNewOrder = async (req, res) => {
         return res.status(404).json({ 'message': 'Date not found in event_dates' });
 
     if(selectedDate.max_tickets<0)
-        return res.status(400).json({'message': `There are ${selectedDate.max_tickets + quantity} available`});
+        return res.status(401).json({'message': `There are ${selectedDate.max_tickets + quantity} available`});
 
 
    try{
@@ -39,7 +39,7 @@ const makeNewOrder = async (req, res) => {
             "event": event,
             "quantity": quantity,
             "total_price": totalPrice,
-            "date_of_event": selectedDate.date.toISOString,
+            "date_of_event": selectedDate.date,
             "user_email": user_email
         });
 

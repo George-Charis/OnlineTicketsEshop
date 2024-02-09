@@ -36,7 +36,7 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
     if (!req?.params?.key) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
-    const decryptedUid = req.params.key;
+    let decryptedUid = req.params.key;
 
     if(req.params.iv){
         const secretKey = process.env.UID_SECRET_KEY; 
@@ -76,7 +76,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     if (!req?.params?.key) return res.status(400).json({ 'message': 'encrypted User ID and iv are required.' });
 
-    const decryptedUid = req.params.key;
+    let decryptedUid = req.params.key;
 
     if(req.params.iv){
         const secretKey = process.env.UID_SECRET_KEY; 
